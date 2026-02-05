@@ -66,6 +66,8 @@ final class NoteViewController: UIViewController {
 
     private var penColor: UIColor = .black
     private var penWidth: CGFloat = 6
+    
+    private var colorPickerButton: UIButton?
 
     init(noteID: String) {
         self.noteID = noteID
@@ -206,6 +208,21 @@ final class NoteViewController: UIViewController {
     private func updatePen() {
         canvas.tool = PKInkingTool(.pen, color: penColor, width: penWidth)
     }
+    
+    // =====================
+    // MARK: - カラーピッカー
+    // =====================
+    private func showColorPicker() {
+        let picker = UIColorPickerViewController()
+        picker.selectedColor = penColor
+        picker.supportsAlpha = false
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+    
+    private func updateColorPickerButton() {
+        colorPickerButton?.backgroundColor = penColor
+    }
 
     // =====================
     // MARK: - UI
@@ -239,9 +256,24 @@ final class NoteViewController: UIViewController {
             b.addAction(UIAction { _ in
                 self.penColor = c
                 self.updatePen()
+                self.updateColorPickerButton()
             }, for: .touchUpInside)
             stack.addArrangedSubview(b)
         }
+
+        let colorPicker = UIButton(type: .system)
+        colorPicker.setTitle("🎨", for: .normal)
+        colorPicker.backgroundColor = penColor
+        colorPicker.layer.cornerRadius = colorPicker.height
+        colorPicker.layer.borderWidth = 1
+        colorPicker.layer.borderColor = UIColor.systemGray.cgColor
+        colorPicker.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        colorPicker.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        colorPicker.addAction(UIAction { _ in
+            self.showColorPicker()
+        }, for: .touchUpInside)
+        stack.addArrangedSubview(colorPicker)
+        colorPickerButton = colorPicker
 
         let eraser = UIButton(type: .system)
         eraser.setTitle("消", for: .normal)
@@ -249,6 +281,23 @@ final class NoteViewController: UIViewController {
             self.canvas.tool = PKEraserTool(.vector)
         }, for: .touchUpInside)
         stack.addArrangedSubview(eraser)
+    }
+}
+
+// =====================
+// MARK: - カラーピッカー デリゲート
+// =====================
+extension NoteViewController: UIColorPickerViewControllerDelegate {
+    func colorPickerViewControllerDidSelectColor(_ viewController: UIColorPickerViewController) {
+        penColor = viewController.selectedColor
+        updatePen()
+        updateColorPickerButton()
+    }
+    
+    func colorPickerViewControllerDidFinish(_ viewController: UIColorPickerViewController) {
+        penColor = viewController.selectedColor
+        updatePen()
+        updateColorPickerButton()
     }
 }
 
